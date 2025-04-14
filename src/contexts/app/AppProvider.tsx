@@ -100,12 +100,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const fetchTopTraders = useCallback(async (addresses: string[]) => {
     try {
       const response = await post('/top-traders', { addresses });
+      // Get 10 results per coin
+      const resultsPerCoin = 10;
       if (response.data.success) {
-        const limitedData = response.data.data.slice(0, 10);
+        const limitedData = response.data.data.slice(0, addresses.length * resultsPerCoin);
         setTopTradersData(limitedData);
         setWalletData(limitedData);
       }
-      return response.data.data.slice(0, 10);
+      return response.data.data.slice(0, addresses.length * resultsPerCoin);
     } catch (error: any) {
       TOASTNO.error(error?.message || 'Failed to fetch top traders');
       return [];
@@ -116,11 +118,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       const response = await post('/top-holders', { addresses });
       if (response.data.success) {
-        const limitedData = response.data.data.slice(0, 10);
+        const limitedData = response.data.data.slice(0, addresses.length * 10);
         setTopHoldersData(limitedData);
         setWalletData(limitedData);
       }
-      return response.data.data.slice(0, 10);
+      return response.data.data.slice(0, addresses.length * 10);
     } catch (error: any) {
       TOASTNO.error(error?.message || 'Failed to fetch top holders');
       return [];
@@ -131,11 +133,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       const response = await post('/early-buyers', { addresses });
       if (response.data.success) {
-        const limitedData = response.data.data.slice(0, 20);
+        const limitedData = response.data.data.slice(0, addresses.length * 20);
         setEarlyBuyersData(limitedData);
         setWalletData(limitedData);
       }
-      return response.data.data.slice(0, 20);
+      return response.data.data.slice(0, addresses.length * 20);
     } catch (error: any) {
       TOASTNO.error(error?.message || 'Failed to fetch early buyers');
       return [];
@@ -286,4 +288,4 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       {children}
     </AppContext.Provider>
   );
-}; 
+};
