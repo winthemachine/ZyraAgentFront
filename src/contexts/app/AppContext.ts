@@ -336,6 +336,8 @@ export type WalletDashboardData = {
   refresh_requested_at: number | null;
 }
 
+export type Period = '1d' | '7d' | '30d' | 'all';
+
 export type WalletDetailsResponse = {
   holdings: HoldingData[];
   recent: HoldingData[];
@@ -358,7 +360,7 @@ interface AppContextType {
   fetchWalletChecker: (selectedWalletAddresses: string[]) => void;
   checkWalletLoading: boolean;
   walletDetails: WalletDetailsResponse | null;
-  fetchWalletDetails: (address: string) => Promise<void>;
+  fetchWalletDetails: (address: string, period: Period) => Promise<void>;
   walletDetailsLoading: boolean;
   topTradersData: TopTraderData[];
   topHoldersData: TopHolderData[];
@@ -366,6 +368,8 @@ interface AppContextType {
   walletCheckerFilters: WalletCheckerFilters;
   setWalletCheckerFilters: (filters: WalletCheckerFilters) => void;
   filteredWalletData: WalletCheckerData[];
+  selectedWalletAddresses: string[];
+  setSelectedWalletAddresses: (addresses: string[]) => void;
 }
 
 export const AppContext = createContext<AppContextType | undefined>(undefined); 

@@ -31,16 +31,15 @@ const AppHeader: React.FC = () => {
     return (
         <div className='border-b border-[#2a2a2a] sticky top-0 bg-[#050510] z-50 h-[64px] max-h-[64px]  lg:h-[76px] lg:max-h-[76px]'>
             <header className="flex items-center justify-between px-4 sm:px-6 lg:px-8 py-4 w-full min-xl:container mx-auto relative">
-                <div className="flex items-center gap-4 sm:gap-16 cursor-pointer" onClick={() => navigate(APP_ROUTES.LANDING)}>
-                    <h1 className="text-2xl sm:text-3xl font-bold text-[#9c46eb]">ZYRA</h1>
-                </div>
-                <div className="hidden lg:flex gap-6">
-                    <Link to="/home" className="text-white text-lg hover:text-[#9c46eb]">
-                        Home
-                    </Link>
-                    <Link to="/saved-wallet" className="text-white text-lg hover:text-[#9c46eb]">
-                        Saved Wallets
-                    </Link>
+                <div className='flex flex-row items-center gap-6'>
+                    <div className="flex items-center gap-4 sm:gap-16 cursor-pointer" onClick={() => navigate(APP_ROUTES.LANDING)}>
+                        <h1 className="text-2xl sm:text-3xl font-bold text-[#9c46eb]">ZYRA</h1>
+                    </div>
+                    <div className="hidden lg:flex gap-6">
+                        <Link to="/home" className="text-white text-lg hover:text-[#9c46eb]">
+                            Home
+                        </Link>
+                    </div>
                 </div>
                 <div className="flex items-center gap-4">
                     <Link to={'/home'}
@@ -60,9 +59,6 @@ const AppHeader: React.FC = () => {
                         <nav className="flex flex-col gap-4">
                             <Link to="/home" className="text-white text-lg hover:text-[#9c46eb]" onClick={() => setMobileMenuOpen(false)}>
                                 Home
-                            </Link>
-                            <Link to="/saved-wallet" className="text-white text-lg hover:text-[#9c46eb]" onClick={() => setMobileMenuOpen(false)}>
-                                Saved Wallets
                             </Link>
                             <Link to="/home" className="bg-gradient-to-r from-[#582885] to-[#9c46eb] text-white px-3 sm:px-5 py-2 rounded-full hover:opacity-90 transition text-sm sm:text-lg" onClick={() => setMobileMenuOpen(false)}>
                                 Account

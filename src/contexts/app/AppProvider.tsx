@@ -7,7 +7,8 @@ import {
   TopHolderData,
   EarlyBuyerData,
   WalletCheckerData,
-  WalletCheckerFilters
+  WalletCheckerFilters,
+  Period
 } from './AppContext';
 import { toast as TOASTNO } from 'react-toastify';
 import { useAPI } from '@/hooks/useAPI';
@@ -33,6 +34,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   
   const [walletDetails, setWalletDetails] = useState<WalletDetailsResponse | null>(null);
+  const [selectedWalletAddresses, setSelectedWalletAddresses] = useState<string[]>([]);
 
   
   const [walletCheckerFilters, setWalletCheckerFilters] = useState<WalletCheckerFilters>({
@@ -99,11 +101,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       const response = await post('/top-traders', { addresses });
       if (response.data.success) {
-        // const sortedData = sortByTopRank(response.data.data);
-        setTopTradersData(response.data.data);
-        setWalletData(response.data.data);
+        const limitedData = response.data.data.slice(0, 10);
+        setTopTradersData(limitedData);
+        setWalletData(limitedData);
       }
-      return response.data.data;
+      return response.data.data.slice(0, 10);
     } catch (error: any) {
       TOASTNO.error(error?.message || 'Failed to fetch top traders');
       return [];
@@ -114,11 +116,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       const response = await post('/top-holders', { addresses });
       if (response.data.success) {
-        // const sortedData = sortByTopRank(response.data.data);
-        setTopHoldersData(response.data.data);
-        setWalletData(response.data.data);
+        const limitedData = response.data.data.slice(0, 10);
+        setTopHoldersData(limitedData);
+        setWalletData(limitedData);
       }
-      return response.data.data;
+      return response.data.data.slice(0, 10);
     } catch (error: any) {
       TOASTNO.error(error?.message || 'Failed to fetch top holders');
       return [];
@@ -129,11 +131,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       const response = await post('/early-buyers', { addresses });
       if (response.data.success) {
-        // const sortedData = sortByTopRank(response.data.data);
-        setEarlyBuyersData(response.data.data);
-        setWalletData(response.data.data);
+        const limitedData = response.data.data.slice(0, 20);
+        setEarlyBuyersData(limitedData);
+        setWalletData(limitedData);
       }
-      return response.data.data;
+      return response.data.data.slice(0, 20);
     } catch (error: any) {
       TOASTNO.error(error?.message || 'Failed to fetch early buyers');
       return [];
@@ -184,10 +186,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, [fetchTopTraders, fetchTopHolders, fetchEarlyBuyers]);
 
-  const fetchWalletDetails = useCallback(async (address: string) => {
+  const fetchWalletDetails = useCallback(async (address: string, period: Period = '30d') => {
     setWalletDetailsLoading(true);
     try {
-      const response = await post('/wallet-details', { address });
+      const response = await post('/wallet-details', { address, period });
       if (response.data.success) {
         setWalletDetails(response.data.data);
       } else {
@@ -200,7 +202,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, [post]);
 
-  
+  const parseFilterValue = (value: string): number => {
+    if (!value) return 0;
+    // Remove commas and dots except the last decimal point
+    const cleanValue = value.replace(/,/g, '').toLowerCase();
+    
+    // Handle 'k' suffix
+    if (cleanValue.endsWith('k')) {
+      return parseFloat(cleanValue.slice(0, -1)) * 1000;
+    }
+    
+    return parseFloat(cleanValue);
+  };
+
   useEffect(() => {
     if (!walletCheckerData.length) {
       setFilteredWalletData([]);
@@ -208,23 +222,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
 
     const filtered = walletCheckerData.filter(wallet => {
-      const data = walletCheckerFilters.timeframe === '30d' ? wallet.wallet_30d : wallet.wallet_7d;
-      const distribution = walletCheckerFilters.timeframe === '30d' ? wallet.distribution_30d : wallet.distribution_7d;
+      const data = wallet.wallet_30d;
+      const distribution = wallet.distribution_30d;
 
-      
-      const minPnl = parseFloat(walletCheckerFilters.minPnl);
-      const maxPnl = parseFloat(walletCheckerFilters.maxPnl);
-      if (walletCheckerFilters.minPnl !== '' && !isNaN(minPnl) && data.data.pnl < minPnl) return false;
-      if (walletCheckerFilters.maxPnl !== '' && !isNaN(maxPnl) && data.data.pnl > maxPnl) return false;
+      if (!data || !distribution) return false;
 
+      const minPnl = parseFilterValue(walletCheckerFilters.minPnl);
+      const maxPnl = parseFilterValue(walletCheckerFilters.maxPnl);
       
+      // PNL check in USD
+      if (walletCheckerFilters.minPnl !== '' && !isNaN(minPnl) && data.data.realized_profit_30d < minPnl) return false;
+      if (walletCheckerFilters.maxPnl !== '' && !isNaN(maxPnl) && data.data.realized_profit_30d > maxPnl) return false;
+
       const minWinrate = parseFloat(walletCheckerFilters.minWinrate);
       const maxWinrate = parseFloat(walletCheckerFilters.maxWinrate);
       const winratePercentage = data.data.winrate * 100;
       if (walletCheckerFilters.minWinrate !== '' && !isNaN(minWinrate) && winratePercentage < minWinrate) return false;
       if (walletCheckerFilters.maxWinrate !== '' && !isNaN(maxWinrate) && winratePercentage > maxWinrate) return false;
 
-      
       const tokenCount = distribution.data.tokens.length;
       const minTokens = parseFloat(walletCheckerFilters.minTokens);
       const maxTokens = parseFloat(walletCheckerFilters.maxTokens);
@@ -262,6 +277,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         walletCheckerFilters,
         setWalletCheckerFilters,
         filteredWalletData,
+        selectedWalletAddresses,
+        setSelectedWalletAddresses
       }}>
       {children}
     </AppContext.Provider>

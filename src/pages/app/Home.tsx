@@ -30,7 +30,9 @@ const Home = () => {
     fetchWalletChecker,
     walletCheckerFilters,
     setWalletCheckerFilters,
-    filteredWalletData
+    filteredWalletData,
+    selectedWalletAddresses,
+    setSelectedWalletAddresses
   } = useApp();
 
   const [inputValue, setInputValue] = useState('');
@@ -38,8 +40,6 @@ const Home = () => {
 
   const [walletCheckerInput, setWalletCheckerInput] = useState('');
   const [copiedAddresses, setCopiedAddresses] = useState<{[key: string]: boolean}>({});
-
-  const [selectedWalletAddresses, setSelectedWalletAddresses] = useState<string[]>([]);
 
   useEffect(() => {
     setSelectedFunction('traders');
@@ -72,18 +72,6 @@ const Home = () => {
       toast.success('All addresses copied to clipboard!');
     }
   };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && inputValue.trim()) {
-      if (!selectedFunction) {
-        toast.warning('Please select a function first');
-        return;
-      }
-      addToken(inputValue.trim());
-      setInputValue('');
-    }
-  };
-
   const handleSearch = () => {
     if (!selectedFunction) {
       toast.warning('Please select a function first');
@@ -205,6 +193,13 @@ const Home = () => {
       ];
     }
 
+    const formatSolBalance = (balance: string | number) => {
+      if (!balance) return '0';
+      const num = typeof balance === 'string' ? parseFloat(balance) : balance;
+      if (isNaN(num)) return '0';
+      return (num / 1000000000).toFixed(2) === '0.00' ? '0' : (num / 1000000000).toFixed(2);
+    };
+
     const baseColumns: Column<TopTraderData | TopHolderData>[] = [
       {
         header: 'Trader',
@@ -213,14 +208,9 @@ const Home = () => {
             {row.avatar && (
               <img src={row.avatar} alt={row.name || row.address} className="w-6 h-6 rounded-full" />
             )}
-            <span className="font-mono truncate max-w-[120px]">
-              {row.name || row.address.slice(0, 8)}...
+            <span className="font-mono truncate w-[300px]">
+              {row.name || row.address}...
             </span>
-            {row.wallet_tag_v2 && (
-              <span className="bg-[#9c46eb] text-xs px-2 py-0.5 rounded min-w-[62px]">
-                {row.wallet_tag_v2}
-              </span>
-            )}
             {copiedAddresses[row.address] ? (
               <Check
                 color="#828282"
@@ -243,7 +233,7 @@ const Home = () => {
         header: 'SOL Bal/Age',
         accessor: (row) => (
           <div className="flex flex-col">
-            <span>{parseFloat(row.sol_balance) ? formatNumber(parseFloat(row.sol_balance)) : '--'}</span>
+            <span>{formatSolBalance(row.sol_balance)}</span>
             <span className="text-xs text-gray-400">
               {parseInt(row.created_at) ? formatTimeAgo(parseInt(row.created_at)) : '--'}
             </span>
@@ -254,8 +244,8 @@ const Home = () => {
       {
         header: 'Source/TF Time',
         accessor: (row) => (
-          <div className="flex flex-col">
-            <span>{row.native_transfer?.name || '--'}</span>
+          <div className="flex flex-col w-[100px] ">
+            <span className="truncate text-base">{row.native_transfer?.name || row.native_transfer?.from_address || '--'}</span>
             <span className="text-xs text-gray-400">
               {parseInt(row.last_active_timestamp) ? formatTimeAgo(parseInt(row.last_active_timestamp)) : '--'}
             </span>
@@ -393,6 +383,7 @@ const Home = () => {
       header: 'Address',
       accessor: (row: WalletCheckerData, index: number) => {
         const data = row.wallet_30d.data;
+
         const address = selectedWalletAddresses[index]; // Get address from the input order
         return (
           <div className="flex items-center gap-2">
@@ -531,6 +522,33 @@ const Home = () => {
     });
   };
 
+  const formatPnlInput = (value: string): string => {
+    if (!value) return '';
+    // If it ends with 'k', keep it as is
+    if (value.toLowerCase().endsWith('k')) return value;
+    // Try to parse the number
+    const num = parseFloat(value.replace(/,/g, ''));
+    if (isNaN(num)) return '';
+    // Format with commas for thousands
+    return num.toLocaleString('en-US');
+  };
+
+  const handlePnlChange = (key: 'minPnl' | 'maxPnl', value: string) => {
+    // Allow empty input
+    if (!value) {
+      handleFilterChange(key, '');
+      return;
+    }
+    
+    // Remove existing commas and validate
+    const cleanValue = value.replace(/,/g, '').toLowerCase();
+    
+    // Allow 'k' suffix
+    if (cleanValue.endsWith('k') || /^\d*\.?\d*$/.test(cleanValue)) {
+      handleFilterChange(key, cleanValue);
+    }
+  };
+
   return (
     <>
       <section className="container mx-auto px-4 sm:px-6 lg:px-16 py-8 sm:py-12 flex flex-col md:flex-row items-center gap-8">
@@ -579,7 +597,7 @@ const Home = () => {
           Choose what type of wallets you want to gather, then enter one or more token addresses to get them from
         </p>
 
-        <div className="flex flex-row justify-around mb-8 sm:mb-12 px-24">
+        <div className="flex flex-col lg:flex-row gap-4 justify-around mb-8 sm:mb-12 px-1 lg:px-24">
           {functionButtons.map((button) => (
             <button
               key={button.id}
@@ -610,9 +628,23 @@ const Home = () => {
                   type="text"
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  placeholder="Enter token address"
+                  placeholder="Enter a list of token addresses (comma separated or 1 per line)"
                   className="w-full bg-transparent border border-[#9c46eb]/[70%] rounded-lg py-3 sm:py-4 px-4 sm:px-5 focus:outline-none focus:ring-1 focus:ring-[#9c46eb] text-base sm:text-lg"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      const tokens = e.currentTarget.value
+                        .split(/[,\s\n]+/)
+                        .map(token => token.trim())
+                        .filter(Boolean);
+
+                      tokens.forEach(token => {
+                        if (selectedTokens.length < 20) {
+                          addToken(token);
+                        }
+                      });
+                      setInputValue('');
+                    }
+                  }}
                 />
               </div>
               <button
@@ -631,7 +663,7 @@ const Home = () => {
             </div>
 
             {selectedTokens.length > 0 && (
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2 max-h-[92px] overflow-y-auto">
                 {selectedTokens.map((token, index) => (
                   <div
                     key={index}
@@ -697,26 +729,34 @@ const Home = () => {
           Now that you have plenty of wallets, filter the ones that qualify your criteria.
         </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 px-[200px]">
+        <div className="grid grid-cols-2 gap-4 mb-12 px-1 lg:px-[200px]">
           <div className="flex flex-col gap-2">
-            <label className="text-sm text-gray-400">Min PNL</label>
-            <input
-              type="number"
-              value={walletCheckerFilters.minPnl}
-              onChange={(e) => handleFilterChange('minPnl', e.target.value)}
-              placeholder="Min PNL"
-              className="bg-transparent border border-[#9c46eb]/[70%] rounded-lg py-2 px-3 outline-none"
-            />
+            <label className="text-sm text-gray-400">Min PNL ($)</label>
+            <div className="relative">
+              <input
+                type="text"
+                value={formatPnlInput(walletCheckerFilters.minPnl)}
+                onChange={(e) => handlePnlChange('minPnl', e.target.value)}
+                placeholder="e.g. 100,000 or 100k"
+                className="w-full bg-transparent border border-[#9c46eb]/[70%] rounded-lg py-2 px-3 outline-none"
+              />
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">USD</span>
+            </div>
+            <p className="text-xs text-gray-500">Enter value in USD (e.g. 100,000 or 100k)</p>
           </div>
           <div className="flex flex-col gap-2">
-            <label className="text-sm text-gray-400">Max PNL</label>
-            <input
-              type="number"
-              value={walletCheckerFilters.maxPnl}
-              onChange={(e) => handleFilterChange('maxPnl', e.target.value)}
-              placeholder="Max PNL"
-              className="bg-transparent border border-[#9c46eb]/[70%] rounded-lg py-2 px-3 outline-none"
-            />
+            <label className="text-sm text-gray-400">Max PNL ($)</label>
+            <div className="relative">
+              <input
+                type="text"
+                value={formatPnlInput(walletCheckerFilters.maxPnl)}
+                onChange={(e) => handlePnlChange('maxPnl', e.target.value)}
+                placeholder="e.g. 100,000 or 100k"
+                className="w-full bg-transparent border border-[#9c46eb]/[70%] rounded-lg py-2 px-3 outline-none"
+              />
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">USD</span>
+            </div>
+            <p className="text-xs text-gray-500">Enter value in USD (e.g. 100,000 or 100k)</p>
           </div>
 
           <div className="flex flex-col gap-2">
@@ -759,19 +799,8 @@ const Home = () => {
               className="bg-transparent border border-[#9c46eb]/[70%] rounded-lg py-2 px-3 outline-none"
             />
           </div>
-          <div className="flex flex-col gap-2 w-[200px]">
-            <label className="text-sm text-gray-400">Timeframe</label>
-            <select
-              value={walletCheckerFilters.timeframe}
-              onChange={(e) => handleFilterChange('timeframe', e.target.value as '7d' | '30d')}
-              className="bg-transparent border border-[#9c46eb]/[70%] rounded-lg py-2 px-3 outline-none"
-            >
-              <option value="7d" style={{ color: 'black' }}>7 Days</option>
-              <option value="30d" style={{ color: 'black' }}>30 Days</option>
-            </select>
-          </div>
         </div>
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-4 mb-12">
           <div className="flex items-center gap-4">
             <input
               type="text"
@@ -782,12 +811,12 @@ const Home = () => {
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
 
-                  const addresses = e.currentTarget.value
+                  const addresses: string[] = e.currentTarget.value
                     .split(/[,\s\n]+/)
                     .map(addr => addr.trim())
                     .filter(Boolean);
 
-                  setSelectedWalletAddresses(prev => [...prev, ...addresses]);
+                  setSelectedWalletAddresses([...selectedWalletAddresses, ...addresses]);
                   setWalletCheckerInput('');
                 }
               }}
@@ -808,7 +837,7 @@ const Home = () => {
           </div>
 
           {selectedWalletAddresses.length > 0 && (
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 max-h-[92px] overflow-y-auto">
               {selectedWalletAddresses.map((address, index) => (
                 <div
                   key={index}
@@ -818,7 +847,8 @@ const Home = () => {
                   <X
                     className="h-4 w-4 min-w-4 cursor-pointer hover:text-red-500"
                     onClick={() => {
-                      setSelectedWalletAddresses(prev => prev.filter(addr => addr !== address));
+                      setSelectedWalletAddresses([...selectedWalletAddresses].filter((addr: string) => addr !== address));
+                      
                     }}
                   />
                 </div>

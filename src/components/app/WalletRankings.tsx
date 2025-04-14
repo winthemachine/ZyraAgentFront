@@ -7,11 +7,16 @@ interface Props {
 
 const WalletRankings: React.FC<Props> = ({ data, loading }) => {
   const formatNumber = (num: number) => {
-    return num.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    const isNegative = num < 0;
+    const absNum = Math.abs(num);
+    const formattedNum = absNum.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    return isNegative ? `-$${formattedNum}` : `$${formattedNum}`;
   };
 
   const formatPercentage = (num: number) => {
-    return num.toFixed(1);
+    const isNegative = num < 0;
+    const absNum = Math.abs(num);
+    return `${isNegative ? '-' : '+'}${absNum.toFixed(1)}%`;
   };
 
   const getTimeAgo = (timestamp: number) => {
@@ -28,8 +33,8 @@ const WalletRankings: React.FC<Props> = ({ data, loading }) => {
       header: 'Token/Last Active',
       accessor: (row: HoldingData) => (
         <div className="flex items-center gap-2">
-          {row.token.logo && (
-            <img src={row.token.logo} alt={row.token.symbol} className="w-10 h-10 rounded-full" />
+          {row.token.logo && row.token.logo !== '' && (
+            <img src={row.token.logo} alt={''} className="w-10 h-10 rounded-full" />
           )}
           <div>
             <div>{row.token.symbol}</div>
@@ -52,11 +57,11 @@ const WalletRankings: React.FC<Props> = ({ data, loading }) => {
               <div className="text-[#ea3921]">Sell All</div>
             ) : (
               <div className={getProfitColor(profit)}>
-                ${formatNumber(Math.abs(profit))}
+                {formatNumber(profit)}
               </div>
             )}
             <div className={`text-sm ${getProfitColor(pnl)}`}>
-              {pnl >= 0 ? '+' : '-'}{formatPercentage(Math.abs(pnl) * 100)}%
+              {formatPercentage(pnl * 100)}
             </div>
           </div>
         );
@@ -71,10 +76,10 @@ const WalletRankings: React.FC<Props> = ({ data, loading }) => {
         return (
           <div>
             <div className={getProfitColor(profit)}>
-              ${formatNumber(Math.abs(profit))}
+              {formatNumber(profit)}
             </div>
             <div className={`text-sm ${getProfitColor(pnl)}`}>
-              {pnl >= 0 ? '+' : '-'}{formatPercentage(Math.abs(pnl) * 100)}%
+              {formatPercentage(pnl * 100)}
             </div>
           </div>
         );
@@ -89,10 +94,10 @@ const WalletRankings: React.FC<Props> = ({ data, loading }) => {
         return (
           <div>
             <div className={getProfitColor(profit)}>
-              ${formatNumber(Math.abs(profit))}
+              {formatNumber(profit)}
             </div>
             <div className={`text-sm ${getProfitColor(pnl)}`}>
-              {pnl >= 0 ? '+' : '-'}{formatPercentage(Math.abs(pnl) * 100)}%
+              {formatPercentage(pnl * 100)}
             </div>
           </div>
         );
@@ -103,7 +108,7 @@ const WalletRankings: React.FC<Props> = ({ data, loading }) => {
       header: 'Balance/USD',
       accessor: (row: HoldingData) => (
         <div>
-          <div>${formatNumber(parseFloat(row.usd_value))}</div>
+          <div>{formatNumber(parseFloat(row.usd_value))}</div>
           <div className="text-sm text-gray-400">{row.balance}</div>
         </div>
       ),
@@ -111,7 +116,7 @@ const WalletRankings: React.FC<Props> = ({ data, loading }) => {
     },
     {
       header: 'Position %',
-      accessor: (row: HoldingData) => `${formatPercentage(parseFloat(row.position_percent))}%`,
+      accessor: (row: HoldingData) => `${formatPercentage(parseFloat(row.position_percent) * 100)}`,
       className: 'text-left'
     },
     {
@@ -123,8 +128,8 @@ const WalletRankings: React.FC<Props> = ({ data, loading }) => {
       header: 'Bought/Avg',
       accessor: (row: HoldingData) => (
         <div>
-          <div>${formatNumber(parseFloat(row.history_bought_cost))}</div>
-          <div className="text-sm text-gray-400">${formatNumber(parseFloat(row.avg_cost))}</div>
+          <div>{formatNumber(parseFloat(row.history_bought_cost))}</div>
+          <div className="text-sm text-gray-400">{formatNumber(parseFloat(row.avg_cost))}</div>
         </div>
       ),
       className: 'text-left'
@@ -133,17 +138,16 @@ const WalletRankings: React.FC<Props> = ({ data, loading }) => {
       header: 'Sold/Avg',
       accessor: (row: HoldingData) => (
         <div>
-          <div>${formatNumber(parseFloat(row.history_sold_income))}</div>
-          <div className="text-sm text-gray-400">${formatNumber(parseFloat(row.avg_sold))}</div>
+          <div>{formatNumber(parseFloat(row.history_sold_income))}</div>
+          <div className="text-sm text-gray-400">{formatNumber(parseFloat(row.avg_sold))}</div>
         </div>
       ),
       className: 'text-left'
     }
   ];
 
-  console.log('============ loading =============', loading);
   return (
-    <div className="bg-[rgba(5,5,16,1)] rounded-[20px] p-6">
+    <div className="bg-[rgba(5,5,16,1)] rounded-[20px] p-1 lg:p-6">
       {loading ? (
         <div className="flex justify-center items-center py-20">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#9c46eb]"></div>

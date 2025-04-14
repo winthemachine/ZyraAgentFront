@@ -27,8 +27,10 @@ import avatar2 from '../assets/images/avatar-2.png';
 import avatar3 from '../assets/images/avatar-3.png';
 import avatar4 from '../assets/images/avatar-4.png';
 import avatar5 from '../assets/images/avatar-5.png';  
+import icon346 from '../assets/images/346.png';
 
 const IMAGES = {
+  icon346,
   avatar1,
   avatar2,
   avatar3,

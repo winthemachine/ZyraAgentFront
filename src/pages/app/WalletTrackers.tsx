@@ -4,7 +4,8 @@ import WalletTrackerDashboard from '@/components/app/WalletTrackerDashboard'
 import { Tabs, TabsList, TabsTrigger } from '@radix-ui/react-tabs'
 import { useParams } from 'react-router-dom'
 import { useApp } from '@/hooks/useApp'
-import { WalletDashboardData } from '@/contexts/app/AppContext'
+import { WalletDashboardData, Period } from '@/contexts/app/AppContext'
+import IMAGES from '@/utils/images'
 
 const WalletTrackers: React.FC = () => {
   const { walletDetails, fetchWalletDetails, walletDetailsLoading } = useApp();
@@ -12,26 +13,58 @@ const WalletTrackers: React.FC = () => {
   const address = params?.address || '';
   const [activeTab, setActiveTab] = useState<string>("recent");
   const [walletAddress, setWalletAddress] = useState<string>("");
+  const [selectedPeriod, setSelectedPeriod] = useState<Period>("30d");
 
   useEffect(() => {
     if (address && address !== '') {
       setWalletAddress(address);
-      fetchWalletDetails(address);
+      fetchWalletDetails(address, selectedPeriod);
       setActiveTab("recent");
     }
-  }, [address, fetchWalletDetails]);
+  }, [address, fetchWalletDetails, selectedPeriod]);
+
+  const handlePeriodChange = (period: Period) => {
+    setSelectedPeriod(period);
+    if (address) {
+      fetchWalletDetails(address, period);
+    }
+  };
 
   if (!address || address === '') return null;
 
+  const periodButtons: { value: Period; label: string }[] = [
+    { value: '1d', label: '1d' },
+    { value: '7d', label: '7d' },
+    { value: '30d', label: '30d' },
+    { value: 'all', label: 'All' },
+  ];
+
   return (
     <main className='flex flex-col gap-6 container mx-auto mt-[2rem] px-4 sm:px-6 lg:px-8'>
-
       <div className='flex flex-col'>
-        <div className='flex flex-row gap-4'>
-          <img src={walletDetails?.dashboard.avatar} className='w-12 h-12 rounded-full' />
-          <div className='flex flex-col gap-2'>
-            <div className='text-base font-medium'>{walletDetails?.dashboard.name}</div>
-            <div className='text-sm text-[#9aa0aa]'>{walletAddress}</div>
+        <div className='flex flex-row gap-4 items-center'>
+          {walletDetails?.dashboard.avatar && walletDetails?.dashboard.avatar.length > 0 ? (
+            <img src={walletDetails?.dashboard.avatar} alt={''} className='w-12 h-12 rounded-full' />
+          ) : (
+            <img src={IMAGES.icon346} alt={''} className='w-12 h-12 rounded-full' />
+          )}
+          <div className='flex flex-col gap-2 flex-1 truncate'>
+            <div className='text-base font-medium'>{walletAddress}</div>
+          </div>
+          <div className="flex gap-2">
+            {periodButtons.map((button) => (
+              <button
+                key={button.value}
+                onClick={() => handlePeriodChange(button.value)}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+                  selectedPeriod === button.value
+                    ? 'bg-[#9C46EB] text-white'
+                    : 'bg-[#2A2A35] text-[#AEACAC] hover:bg-[#3A3A45]'
+                }`}
+              >
+                {button.label}
+              </button>
+            ))}
           </div>
         </div>
       </div>
