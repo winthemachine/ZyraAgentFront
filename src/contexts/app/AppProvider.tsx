@@ -222,17 +222,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
 
     const filtered = walletCheckerData.filter(wallet => {
-      const data = wallet.wallet_30d;
-      const distribution = wallet.distribution_30d;
+      const data = wallet.wallet_7d;
+      const distribution = wallet.distribution_7d;
 
       if (!data || !distribution) return false;
+      if(walletCheckerFilters.minPnl === '' && walletCheckerFilters.maxPnl === '' && walletCheckerFilters.minWinrate === '' && walletCheckerFilters.maxWinrate === '' && walletCheckerFilters.minTokens === '' && walletCheckerFilters.maxTokens === '') {
+        return true;
+      }
 
       const minPnl = parseFilterValue(walletCheckerFilters.minPnl);
       const maxPnl = parseFilterValue(walletCheckerFilters.maxPnl);
       
       // PNL check in USD
-      if (walletCheckerFilters.minPnl !== '' && !isNaN(minPnl) && data.data.realized_profit_30d < minPnl) return false;
-      if (walletCheckerFilters.maxPnl !== '' && !isNaN(maxPnl) && data.data.realized_profit_30d > maxPnl) return false;
+      if (walletCheckerFilters.minPnl !== '' && !isNaN(minPnl) && data.data.total_value < minPnl) return false;
+      if (walletCheckerFilters.maxPnl !== '' && !isNaN(maxPnl) && data.data.total_value > maxPnl) return false;
 
       const minWinrate = parseFloat(walletCheckerFilters.minWinrate);
       const maxWinrate = parseFloat(walletCheckerFilters.maxWinrate);
@@ -248,7 +251,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       return true;
     });
-
+    console.log('filtered', filtered.length);
     setFilteredWalletData(filtered);
   }, [walletCheckerData, walletCheckerFilters]);
 

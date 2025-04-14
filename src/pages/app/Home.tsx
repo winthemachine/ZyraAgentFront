@@ -382,7 +382,7 @@ const Home = () => {
     {
       header: 'Address',
       accessor: (row: WalletCheckerData, index: number) => {
-        const data = row.wallet_30d.data;
+        const data = row.wallet_7d.data;
 
         const address = selectedWalletAddresses[index]; // Get address from the input order
         return (
@@ -391,7 +391,7 @@ const Home = () => {
               <img src={data.avatar} alt="" className="w-6 h-6 rounded-full" />
             )}
             <span className="font-mono truncate max-w-[120px]">
-              {address.slice(0, 8)}...{address.slice(-6)}
+              {address?.slice(0, 8)}...{address?.slice(-6)}
             </span>
             {data.tags?.length > 0 && (
               <span className="bg-[#9c46eb] text-xs px-2 py-0.5 rounded">
@@ -420,11 +420,11 @@ const Home = () => {
     {
       header: 'PnL/USD',
       accessor: (row: WalletCheckerData) => {
-        const data = row.wallet_30d.data;
-        const pnl = data.pnl;
+        const data = row.wallet_7d.data;
+        const pnl = data.total_value;
         return (
           <div className={`flex flex-col ${pnl >= 0 ? 'text-[#42d578]' : 'text-[#ea3921]'}`}>
-            <span>${pnl !== undefined && pnl !== null ? formatNumber(pnl) : '--'}</span>
+            <span>{pnl !== undefined && pnl !== null ? `${pnl >= 0 ? '$' : '-$'}${formatNumber(Math.abs(pnl))}` : '--'}</span>
           </div>
         );
       },
@@ -433,7 +433,7 @@ const Home = () => {
     {
       header: 'Win Rate',
       accessor: (row: WalletCheckerData) => {
-        const data = row.wallet_30d.data;
+        const data = row.wallet_7d.data;
         const winrate = data.winrate;
         return (
           <div className="flex flex-col">
@@ -448,7 +448,7 @@ const Home = () => {
     {
       header: 'Tokens',
       accessor: (row: WalletCheckerData) => {
-        const tokenCount = row.distribution_30d.data.tokens.length;
+        const tokenCount = row.distribution_7d.data.tokens.length;
         return tokenCount;
       },
       className: 'text-left'
@@ -456,10 +456,11 @@ const Home = () => {
     {
       header: 'Realized P.',
       accessor: (row: WalletCheckerData) => {
-        const data = row.wallet_30d.data;
+        const data = row.wallet_7d.data;
+        const profit = data.realized_profit_7d;
         return (
-          <span className={data.realized_profit >= 0 ? 'text-[#42d578]' : 'text-[#ea3921]'}>
-            ${formatNumber(data.realized_profit)}
+          <span className={profit >= 0 ? 'text-[#42d578]' : 'text-[#ea3921]'}>
+            {profit >= 0 ? '$' : '-$'}{formatNumber(Math.abs(profit))}
           </span>
         );
       },
@@ -468,10 +469,11 @@ const Home = () => {
     {
       header: 'Unrealized P.',
       accessor: (row: WalletCheckerData) => {
-        const data = row.wallet_30d.data;
+        const data = row.wallet_7d.data;
+        const profit = data.unrealized_profit;
         return (
-          <span className={data.unrealized_profit >= 0 ? 'text-[#42d578]' : 'text-[#ea3921]'}>
-            ${formatNumber(data.unrealized_profit)}
+          <span className={profit >= 0 ? 'text-[#42d578]' : 'text-[#ea3921]'}>
+            {profit >= 0 ? '$' : '-$'}{formatNumber(Math.abs(profit))}
           </span>
         );
       },
@@ -480,7 +482,7 @@ const Home = () => {
     {
       header: 'Last Active',
       accessor: (row: WalletCheckerData) => {
-        const timestamp = row.wallet_30d.data.last_active_timestamp;
+        const timestamp = row.wallet_7d.data.last_active_timestamp;
         return formatTimeAgo(timestamp);
       },
       className: 'text-left'
