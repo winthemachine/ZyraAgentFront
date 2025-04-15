@@ -16,6 +16,7 @@ type TableProps<T> = {
   pagination?: boolean;
   itemsPerPage?: number;
   className?: string;
+  selectedWalletAddresses?: string[]
 }
 
 const AppTable = <T extends Record<string, any>>({
@@ -24,6 +25,7 @@ const AppTable = <T extends Record<string, any>>({
   pagination = false,
   itemsPerPage = 10,
   className = '',
+  selectedWalletAddresses
 }: TableProps<T>) => {
   const [currentPage, setCurrentPage] = useState(1);
   const navigate = useNavigate();
@@ -48,9 +50,13 @@ const AppTable = <T extends Record<string, any>>({
     return item[column.accessor];
   };
 
-  const handleRowClick = (item: T) => {
+  const handleRowClick = (item: T, index: number) => {
     if(item?.address) {
       navigate(`${APP_ROUTES.WALLET_TRACKER}/${item?.address}`)
+    }
+    if(selectedWalletAddresses && selectedWalletAddresses.length > 0) {
+      const address = selectedWalletAddresses[index];
+      navigate(`${APP_ROUTES.WALLET_TRACKER}/${address}`)
     }
   }
 
@@ -145,7 +151,7 @@ const AppTable = <T extends Record<string, any>>({
                 <tr
                   key={`item-${index}`}
                   className="border-b border-[#2a2a2a] hover:bg-[#2a2a2a]/30 !cursor-pointer"
-                  onClick={() => handleRowClick(item)}
+                  onClick={() => handleRowClick(item, index)}
                 >
                   {columns.map((column, colIndex) => (
                     <td

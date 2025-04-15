@@ -170,6 +170,7 @@ export type WalletCheckerData = {
   distribution_7d: DistributionResponse;
   wallet_30d: WalletPeriodData;
   wallet_7d: WalletPeriodData;
+  wallet_address: string;
 }
 
 export type TokenDistribution = {

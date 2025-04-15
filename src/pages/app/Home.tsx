@@ -59,8 +59,11 @@ const Home = () => {
 
   const copyAllAddresses = () => {
     let addresses: string[] = [];
-    
-    if (selectedFunction === 'buyers') {
+     if (filteredWalletData.length > 0) {
+      // For wallet checker section, get addresses directly from filteredWalletData
+      console.log('filteredWalletData', filteredWalletData);
+      addresses = filteredWalletData.map(row => row.wallet_address);
+    } else if (selectedFunction === 'buyers') {
       addresses = (walletData as EarlyBuyerData[]).map(row => row.maker);
     } else if (selectedFunction === 'traders' || selectedFunction === 'holders') {
       addresses = (walletData as (TopTraderData | TopHolderData)[]).map(row => row.address);
@@ -72,6 +75,7 @@ const Home = () => {
       toast.success('All addresses copied to clipboard!');
     }
   };
+
   const handleSearch = () => {
     if (!selectedFunction) {
       toast.warning('Please select a function first');
@@ -381,17 +385,17 @@ const Home = () => {
   const walletCheckerColumns = [
     {
       header: 'Address',
-      accessor: (row: WalletCheckerData, index: number) => {
+      accessor: (row: WalletCheckerData) => {
         const data = row.wallet_7d.data;
+        const address = row.wallet_address;
 
-        const address = selectedWalletAddresses[index]; // Get address from the input order
         return (
           <div className="flex items-center gap-2">
             {data.avatar && (
               <img src={data.avatar} alt="" className="w-6 h-6 rounded-full" />
             )}
             <span className="font-mono truncate max-w-[120px]">
-              {address?.slice(0, 8)}...{address?.slice(-6)}
+              {address.slice(0, 8)}...{address.slice(-6)}
             </span>
             {data.tags?.length > 0 && (
               <span className="bg-[#9c46eb] text-xs px-2 py-0.5 rounded">
@@ -865,13 +869,25 @@ const Home = () => {
             </div>
           ) : (
             filteredWalletData.length > 0 && (
-              <AppTable
-                columns={walletCheckerColumns as Column<WalletCheckerData>[]}
-                data={filteredWalletData}
-                pagination={true}
-                itemsPerPage={10}
-                className="mt-8"
-              />
+              <>
+                <AppTable
+                  columns={walletCheckerColumns as Column<WalletCheckerData>[]}
+                  data={filteredWalletData}
+                  pagination={true}
+                  itemsPerPage={10}
+                  className="mt-8"
+                  selectedWalletAddresses={selectedWalletAddresses}
+                />
+                <div className="flex justify-center mt-8">
+                  <button 
+                    onClick={copyAllAddresses}
+                    className="text-center bg-gradient-to-r from-[#582885] to-[#9c46eb] text-white px-6 sm:px-10 py-2.5 sm:py-3 rounded-full flex items-center gap-2 text-base sm:text-lg font-medium hover:opacity-90"
+                  >
+                    Copy all to Clipboard
+                    <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5" />
+                  </button>
+                </div>
+              </>
             )
           )
         }

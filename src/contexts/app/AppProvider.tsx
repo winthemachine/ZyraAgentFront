@@ -149,15 +149,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       const response = await post('/check-wallets', { wallets });
       if (response.data.success) {
-        
-        // const sortedData = [...response.data.data].sort((a, b) => {
-        //   const pnlA = a.wallet_30d.data.pnl;
-        //   const pnlB = b.wallet_30d.data.pnl;
-        //   return pnlB - pnlA; 
-        // });
-        setWalletCheckerData(response.data.data);
+        // Add wallet addresses to the response data
+        const dataWithAddresses = response.data.data.map((item: any, index: number) => ({
+          ...item,
+          wallet_address: wallets[index] // Add the wallet address to each item
+        }));
+        console.log({dataWithAddresses});
+        setWalletCheckerData(dataWithAddresses);
+        return dataWithAddresses;
       }
-      return response.data.data;
+      return [];
     } catch (error: any) {
       TOASTNO.error(error?.message || 'Failed to fetch wallet checker data');
       return [];
@@ -253,7 +254,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       return true;
     });
-    console.log('filtered', filtered.length);
     setFilteredWalletData(filtered);
   }, [walletCheckerData, walletCheckerFilters]);
 
@@ -288,4 +288,4 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       {children}
     </AppContext.Provider>
   );
-};
+}; 

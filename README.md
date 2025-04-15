@@ -1,1 +1,1 @@
-# wallet-filters
+# wallet-filter

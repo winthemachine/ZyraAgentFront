@@ -63,7 +63,7 @@ const WalletTrackerDashboard: React.FC<DashboardProps> = ({ data }) => {
                   <div className="flex justify-between">
                     <span className="text-[#9aa0aa]">Bal</span>
                     <div className="flex flex-col items-end">
-                      <span>{parseFloat(data.sol_balance || '0').toFixed(2)} SOL (${formatNumber(parseFloat(data.sol_balance || '0') * 110.84 || 0)})</span>
+                      <span>{parseFloat(data.sol_balance || '0').toFixed(2)} SOL ({formatNumber(parseFloat(data.sol_balance || '0') * 110.84 || 0)})</span>
                       {/* <span className="text-sm text-[#9aa0aa]">${formatNumber(data.total_value || 0)}</span> */}
                     </div>
                   </div>
