@@ -35,11 +35,11 @@ const AppHeader: React.FC = () => {
                     <div className="flex items-center gap-4 sm:gap-16 cursor-pointer" onClick={() => navigate(APP_ROUTES.LANDING)}>
                         <h1 className="text-2xl sm:text-3xl font-bold text-[#9c46eb]">ZYRA</h1>
                     </div>
-                    <div className="hidden lg:flex gap-6">
+                    {/* <div className="hidden lg:flex gap-6">
                         <Link to="/home" className="text-white text-lg hover:text-[#9c46eb]">
                             Home
                         </Link>
-                    </div>
+                    </div> */}
                 </div>
                 <div className="flex items-center gap-4">
                     <Link to={'/home'}
@@ -57,9 +57,9 @@ const AppHeader: React.FC = () => {
                 <div ref={mobileMenuRef} className="sticky top-0 lg:hidden bg-[#0a0a20] border-b border-[#2a2a2a] py-4 px-4">
                     <div className="flex flex-col gap-4">
                         <nav className="flex flex-col gap-4">
-                            <Link to="/home" className="text-white text-lg hover:text-[#9c46eb]" onClick={() => setMobileMenuOpen(false)}>
+                            {/* <Link to="/home" className="text-white text-lg hover:text-[#9c46eb]" onClick={() => setMobileMenuOpen(false)}>
                                 Home
-                            </Link>
+                            </Link> */}
                             <Link to="/home" className="bg-gradient-to-r from-[#582885] to-[#9c46eb] text-white px-3 sm:px-5 py-2 rounded-full hover:opacity-90 transition text-sm sm:text-lg" onClick={() => setMobileMenuOpen(false)}>
                                 Launch
                             </Link>

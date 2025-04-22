@@ -19,7 +19,6 @@ type Column<T> = {
 const Home = () => {
   const {
     selectedTokens,
-    addToken,
     removeToken,
     selectedFunction,
     setSelectedFunction,
@@ -33,12 +32,11 @@ const Home = () => {
     setWalletCheckerFilters,
     filteredWalletData,
     selectedWalletAddresses,
-    setSelectedWalletAddresses
+    setSelectedWalletAddresses,
+    addToken
   } = useApp();
 
   const [inputValue, setInputValue] = useState('');
-
-
   const [walletCheckerInput, setWalletCheckerInput] = useState('');
   const [copiedAddresses, setCopiedAddresses] = useState<{ [key: string]: boolean }>({});
 
@@ -61,7 +59,6 @@ const Home = () => {
   const copyAllAddresses = () => {
     let addresses: string[] = [];
     if (filteredWalletData.length > 0) {
-      // For wallet checker section, get addresses directly from filteredWalletData
       console.log('filteredWalletData', filteredWalletData);
       addresses = filteredWalletData.map(row => row.wallet_address);
     } else if (selectedFunction === 'buyers') {
@@ -77,22 +74,14 @@ const Home = () => {
     }
   };
 
-  const handleSearch = () => {
-    if (!selectedFunction) {
-      toast.warning('Please select a function first');
-      return;
-    }
-    if (selectedTokens.length === 0) {
-      toast.warning('Please add at least one token address');
-      return;
-    }
-    fetchWalletData(selectedFunction, selectedTokens);
-  };
-
   const handleFunctionSelect = (func: 'traders' | 'holders' | 'buyers') => {
     setSelectedFunction(func);
     setWalletData([]);
   };
+
+  useEffect(() => {
+    console.log('selectedTokens', selectedTokens);
+  }, [selectedTokens]);
 
   const getColumns = useCallback(() => {
     if (selectedFunction === 'buyers') {
@@ -498,6 +487,8 @@ const Home = () => {
       subtitle: 'TRADERS',
       content: 'Gather the top 10 traders\nof a coin or a list of coins.',
       borderColor: '#9c46eb',
+      selectedColor: '#9c46eb',
+      defaultColor: 'transparent',
       bgImg: images.traderBG,
     },
     {
@@ -506,7 +497,9 @@ const Home = () => {
       subtitle: 'HOLDERS',
       bgImg: images.holderBG,
       content: 'Gather the top 10 holders\nof a coin or a list of coins.',
-      borderColor: '#18A0FB',
+      borderColor: '#9c46eb',
+      selectedColor: '#9c46eb',
+      defaultColor: 'transparent',
     },
     {
       id: 'buyers',
@@ -514,17 +507,30 @@ const Home = () => {
       subtitle: 'BUYERS',
       bgImg: images.buyerBG,
       content: 'Gather the first 20 buyers\nof a coin or a list of coins.',
-      borderColor: '#18A0FB',
+      borderColor: '#9c46eb',
+      selectedColor: '#9c46eb',
+      defaultColor: 'transparent',
     }
   ] as const;
 
 
   const handleWalletCheckerSearch = () => {
-    if (selectedWalletAddresses.length === 0) {
-      toast.warning('Please add at least one wallet address');
+    // Get addresses from input, similar to token input logic
+    const addresses = walletCheckerInput.split(/[,\s\n]+/).map(addr => addr.trim()).filter(Boolean)
+
+    if (addresses.length === 0) {
+      toast.warning('Please enter at least one wallet address');
       return;
     }
-    fetchWalletChecker(selectedWalletAddresses);
+
+    // Update selected addresses if there's input
+    if (walletCheckerInput.length !== 0) {
+      setSelectedWalletAddresses(addresses);
+    }
+
+    // Clear input and fetch data
+    setWalletCheckerInput('');
+    fetchWalletChecker(addresses);
   };
 
 
@@ -560,6 +566,37 @@ const Home = () => {
     if (cleanValue.endsWith('k') || /^\d*\.?\d*$/.test(cleanValue)) {
       handleFilterChange(key, cleanValue);
     }
+  };
+
+  const handleSearch = () => {
+    if (!selectedFunction) {
+      toast.warning('Please select a function first');
+      return;
+    }
+    const sTokens = inputValue.length > 0 ? inputValue.split(/[,\s\n]+/).map(token => token.trim()).filter(Boolean) : selectedTokens;
+
+    const tokens = sTokens
+      .filter(Boolean);
+
+    if (tokens.length === 0) {
+      toast.warning('Please enter at least one token address');
+      return;
+    }
+
+    if (inputValue.length !== 0) {
+      tokens.forEach(token => {
+        if (selectedTokens.length < 20) {
+          addToken(token);
+        }
+      });
+    }
+
+    setInputValue('');
+    fetchWalletData(selectedFunction, tokens);
+  };
+
+  const handleChangeInput = (value: string) => {
+    setInputValue(value);
   };
 
   return (
@@ -616,21 +653,25 @@ const Home = () => {
               key={button.id}
               onClick={() => handleFunctionSelect(button.id)}
               disabled={loading}
-              style={{ borderColor: selectedFunction === button.id ? button.borderColor : 'transparent' }}
-              className={`relative text-center py-6 px-8 hover:scale-105 duration-300 transition-all rounded-lg w-full lg:w-[335px] border-2 h-[184px] transition${selectedFunction === button.id
-                  ? ` text-white`
-                  : loading
-                    ? ' text-[#aeacac] opacity-50 cursor-not-allowed border-transparent'
-                    : ' text-[#aeacac] hover:bg-[#301C43] border-transparent'
+              style={{
+                borderColor: selectedFunction === button.id
+                  ? button.selectedColor
+                  : button.defaultColor
+              }}
+              className={`relative text-center py-6 px-8 hover:scale-105 duration-300 transition-all rounded-lg w-full lg:w-[335px] border-2 h-[184px] ${loading ? 'opacity-50 cursor-not-allowed' : ''
                 }`}
             >
-              <div className={`absolute inset-0 ${selectedFunction === button.id ? 'bg-gradient-to-br from-[#9C46EB] to-[#582885] opacity-40' : ''}`}>
-                <img src={button.bgImg} className='w-full h-full object-cover rounded-lg' />
+              <div className="absolute inset-0 rounded-lg overflow-hidden">
+                <img src={button.bgImg} className={`w-full h-full object-cover ${selectedFunction === button.id
+                  ? 'bg-gradient-to-br from-[#88295B] via-[#4E1934] to-[#170A22]'
+                  : 'bg-gradient-to-br from-[#18A0FB] via-[#1656AB] to-[#15091F] opacity-70'
+                  }`} alt="" />
+
               </div>
               <div className="flex flex-col items-start relative z-10">
-                <div className="text-2xl font-bold mb-1 !text-white">{button.title}</div>
-                <div className="text-2xl font-bold mb-3">{button.subtitle}</div>
-                <p className="text-sm text-left opacity-80 whitespace-pre-line">{button.content}</p>
+                <div className="text-2xl font-bold mb-1 text-white">{button.title}</div>
+                <div className="text-2xl font-bold mb-3 text-white">{button.subtitle}</div>
+                <p className="text-sm text-left text-white/80 whitespace-pre-line">{button.content}</p>
               </div>
             </button>
           ))}
@@ -647,35 +688,23 @@ const Home = () => {
                 <input
                   type="text"
                   value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                  placeholder="Enter a list of token addresses (comma separated or 1 per line)"
-                  className="w-full bg-transparent border border-[#9c46eb]/[70%] rounded-lg py-3 sm:py-4 px-4 sm:px-5 focus:outline-none focus:ring-1 focus:ring-[#9c46eb] text-base sm:text-lg"
+                  onChange={(e) => handleChangeInput(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
-                      const tokens = e.currentTarget.value
-                        .split(/[,\s\n]+/)
-                        .map(token => token.trim())
-                        .filter(Boolean);
-
-                      tokens.forEach(token => {
-                        if (selectedTokens.length < 20) {
-                          addToken(token);
-                        }
-                      });
-                      setInputValue('');
+                      handleSearch();
                     }
                   }}
+                  placeholder="Enter a list of token addresses (comma separated or 1 per line)"
+                  className="w-full bg-transparent border border-[#9c46eb]/[70%] rounded-lg py-3 sm:py-4 px-4 sm:px-5 focus:outline-none focus:ring-1 focus:ring-[#9c46eb] text-base sm:text-lg"
                 />
               </div>
               <button
                 onClick={handleSearch}
-                disabled={loading || selectedTokens.length === 0}
+                disabled={loading}
                 className={`px-6 py-3 sm:py-4 rounded-lg text-base sm:text-lg font-medium transition
                   ${loading
                     ? 'bg-[#2a2a2a] text-[#aeacac] opacity-50 cursor-not-allowed'
-                    : selectedTokens.length === 0
-                      ? 'bg-[#2a2a2a] text-[#aeacac] opacity-50 cursor-not-allowed'
-                      : 'bg-gradient-to-r from-[#582885] to-[#9c46eb] text-white hover:opacity-90'
+                    : 'bg-gradient-to-r from-[#582885] to-[#9c46eb] text-white hover:opacity-90'
                   }`}
               >
                 {loading ? 'Searching...' : 'Search'}
@@ -841,26 +870,17 @@ const Home = () => {
               onChange={(e) => setWalletCheckerInput(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
-
-                  const addresses: string[] = e.currentTarget.value
-                    .split(/[,\s\n]+/)
-                    .map(addr => addr.trim())
-                    .filter(Boolean);
-
-                  setSelectedWalletAddresses([...selectedWalletAddresses, ...addresses]);
-                  setWalletCheckerInput('');
+                  handleWalletCheckerSearch();
                 }
               }}
             />
             <button
               onClick={handleWalletCheckerSearch}
-              disabled={checkWalletLoading || selectedWalletAddresses.length === 0}
+              disabled={checkWalletLoading}
               className={`px-6 py-3 sm:py-4 rounded-lg text-base sm:text-lg font-medium transition
                 ${checkWalletLoading
                   ? 'bg-[#2a2a2a] text-[#aeacac] opacity-50 cursor-not-allowed'
-                  : selectedWalletAddresses.length === 0
-                    ? 'bg-[#2a2a2a] text-[#aeacac] opacity-50 cursor-not-allowed'
-                    : 'bg-gradient-to-r from-[#582885] to-[#9c46eb] text-white hover:opacity-90'
+                  : 'bg-gradient-to-r from-[#582885] to-[#9c46eb] text-white hover:opacity-90'
                 }`}
             >
               {checkWalletLoading ? 'Checking...' : 'Check'}
@@ -878,8 +898,7 @@ const Home = () => {
                   <X
                     className="h-4 w-4 min-w-4 cursor-pointer hover:text-red-500"
                     onClick={() => {
-                      setSelectedWalletAddresses([...selectedWalletAddresses].filter((addr: string) => addr !== address));
-
+                      setSelectedWalletAddresses(selectedWalletAddresses.filter(addr => addr !== address));
                     }}
                   />
                 </div>

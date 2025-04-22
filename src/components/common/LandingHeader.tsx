@@ -69,7 +69,7 @@ const LandingHeader: React.FC = () => {
                         <Link to={'/home'}
                             className="hidden lg:block bg-gradient-to-r from-[#582885] to-[#9c46eb] text-white px-3 sm:px-5 py-2 rounded-full hover:opacity-90 transition text-sm sm:text-lg"
                         >
-                            Sign in
+                            Launch
                         </Link>
                         <button ref={menuButtonRef} className="lg:hidden text-white cursor-pointer" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
                             <Menu size={28} />
@@ -91,7 +91,7 @@ const LandingHeader: React.FC = () => {
                                 </button>
                             ))} */}
                             <Link to={'/home'} className="w-full rounded-[30px] bg-gradient-to-r from-[rgba(158,71,238,1)] to-[rgba(90,41,136,1)] font-medium text-white text-lg px-4 py-1.5">
-                                Sign In
+                                Launch
                             </Link>
                         </nav>
                     </div>
