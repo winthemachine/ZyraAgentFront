@@ -371,6 +371,7 @@ interface AppContextType {
   filteredWalletData: WalletCheckerData[];
   selectedWalletAddresses: string[];
   setSelectedWalletAddresses: (addresses: string[]) => void;
+  windowWidth: number;
 }
 
 export const AppContext = createContext<AppContextType | undefined>(undefined); 

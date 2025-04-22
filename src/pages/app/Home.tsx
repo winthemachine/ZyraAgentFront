@@ -7,6 +7,7 @@ import { useApp } from '@/hooks/useApp'
 import { EarlyBuyerData, TopHolderData, TopTraderData, WalletCheckerData, WalletCheckerFilters } from '@/contexts/app/AppContext'
 import { toast } from 'react-toastify'
 import IMAGES from '@/utils/images'
+import images from '@/utils/images'
 
 type Column<T> = {
   header: string;
@@ -39,7 +40,7 @@ const Home = () => {
 
 
   const [walletCheckerInput, setWalletCheckerInput] = useState('');
-  const [copiedAddresses, setCopiedAddresses] = useState<{[key: string]: boolean}>({});
+  const [copiedAddresses, setCopiedAddresses] = useState<{ [key: string]: boolean }>({});
 
   useEffect(() => {
     setSelectedFunction('traders');
@@ -48,18 +49,18 @@ const Home = () => {
   const copyToClipboard = (e: any, text: string) => {
     e.stopPropagation();
     navigator.clipboard.writeText(text);
-    setCopiedAddresses({...copiedAddresses, [text]: true});
+    setCopiedAddresses({ ...copiedAddresses, [text]: true });
     toast.success('Address copied to clipboard!');
-    
+
     // Reset the copied state after 2 seconds
     setTimeout(() => {
-      setCopiedAddresses(prev => ({...prev, [text]: false}));
+      setCopiedAddresses(prev => ({ ...prev, [text]: false }));
     }, 2000);
   };
 
   const copyAllAddresses = () => {
     let addresses: string[] = [];
-     if (filteredWalletData.length > 0) {
+    if (filteredWalletData.length > 0) {
       // For wallet checker section, get addresses directly from filteredWalletData
       console.log('filteredWalletData', filteredWalletData);
       addresses = filteredWalletData.map(row => row.wallet_address);
@@ -386,7 +387,7 @@ const Home = () => {
     {
       header: 'Address',
       accessor: (row: WalletCheckerData) => {
-        const data = row.wallet_7d.data;
+        const data = walletCheckerFilters.timeframe === '7d' ? row.wallet_7d.data : row.wallet_30d.data;
         const address = row.wallet_address;
 
         return (
@@ -397,11 +398,6 @@ const Home = () => {
             <span className="font-mono truncate max-w-[120px]">
               {address.slice(0, 8)}...{address.slice(-6)}
             </span>
-            {data.tags?.length > 0 && (
-              <span className="bg-[#9c46eb] text-xs px-2 py-0.5 rounded">
-                {data.tags[0]}
-              </span>
-            )}
             {copiedAddresses[address] ? (
               <Check
                 color="#828282"
@@ -422,9 +418,9 @@ const Home = () => {
       className: 'text-left'
     },
     {
-      header: 'PnL/USD',
+      header: `PnL/USD`,
       accessor: (row: WalletCheckerData) => {
-        const data = row.wallet_7d.data;
+        const data = walletCheckerFilters.timeframe === '7d' ? row.wallet_7d.data : row.wallet_30d.data;
         const pnl = data.total_value;
         return (
           <div className={`flex flex-col ${pnl >= 0 ? 'text-[#42d578]' : 'text-[#ea3921]'}`}>
@@ -435,9 +431,9 @@ const Home = () => {
       className: 'text-left'
     },
     {
-      header: 'Win Rate',
+      header: `Win Rate`,
       accessor: (row: WalletCheckerData) => {
-        const data = row.wallet_7d.data;
+        const data = walletCheckerFilters.timeframe === '7d' ? row.wallet_7d.data : row.wallet_30d.data;
         const winrate = data.winrate;
         return (
           <div className="flex flex-col">
@@ -450,18 +446,20 @@ const Home = () => {
       className: 'text-left'
     },
     {
-      header: 'Tokens',
+      header: `Tokens`,
       accessor: (row: WalletCheckerData) => {
-        const tokenCount = row.distribution_7d.data.tokens.length;
+        const distribution = walletCheckerFilters.timeframe === '7d' ? row.distribution_7d : row.distribution_30d;
+        console.log({ distribution })
+        const tokenCount = distribution.data.tokens.length;
         return tokenCount;
       },
       className: 'text-left'
     },
     {
-      header: 'Realized P.',
+      header: `Realized P.`,
       accessor: (row: WalletCheckerData) => {
-        const data = row.wallet_7d.data;
-        const profit = data.realized_profit_7d;
+        const data = walletCheckerFilters.timeframe === '7d' ? row.wallet_7d.data : row.wallet_30d.data;
+        const profit = walletCheckerFilters.timeframe === '7d' ? data.realized_profit_7d : data.realized_profit_30d;
         return (
           <span className={profit >= 0 ? 'text-[#42d578]' : 'text-[#ea3921]'}>
             {profit >= 0 ? '$' : '-$'}{formatNumber(Math.abs(profit))}
@@ -473,7 +471,7 @@ const Home = () => {
     {
       header: 'Unrealized P.',
       accessor: (row: WalletCheckerData) => {
-        const data = row.wallet_7d.data;
+        const data = walletCheckerFilters.timeframe === '7d' ? row.wallet_7d.data : row.wallet_30d.data;
         const profit = data.unrealized_profit;
         return (
           <span className={profit >= 0 ? 'text-[#42d578]' : 'text-[#ea3921]'}>
@@ -486,8 +484,8 @@ const Home = () => {
     {
       header: 'Last Active',
       accessor: (row: WalletCheckerData) => {
-        const timestamp = row.wallet_7d.data.last_active_timestamp;
-        return formatTimeAgo(timestamp);
+        const data = walletCheckerFilters.timeframe === '7d' ? row.wallet_7d.data : row.wallet_30d.data;
+        return formatTimeAgo(data.last_active_timestamp);
       },
       className: 'text-left'
     }
@@ -496,18 +494,27 @@ const Home = () => {
   const functionButtons = [
     {
       id: 'traders',
-      label: 'Top 10 Traders',
-      gradient: 'from-[#582885] to-[#9c46eb]'
+      title: 'TOP 10',
+      subtitle: 'TRADERS',
+      content: 'Gather the top 10 traders\nof a coin or a list of coins.',
+      borderColor: '#9c46eb',
+      bgImg: images.traderBG,
     },
     {
       id: 'holders',
-      label: 'Top 10 Holders',
-      gradient: 'from-[#2a5ad7] to-[#3676ef]'
+      title: 'TOP 10',
+      subtitle: 'HOLDERS',
+      bgImg: images.holderBG,
+      content: 'Gather the top 10 holders\nof a coin or a list of coins.',
+      borderColor: '#18A0FB',
     },
     {
       id: 'buyers',
-      label: 'First 20 Buyers',
-      gradient: 'from-[#582885] to-[#9c46eb]'
+      title: 'EARLY',
+      subtitle: 'BUYERS',
+      bgImg: images.buyerBG,
+      content: 'Gather the first 20 buyers\nof a coin or a list of coins.',
+      borderColor: '#18A0FB',
     }
   ] as const;
 
@@ -545,10 +552,10 @@ const Home = () => {
       handleFilterChange(key, '');
       return;
     }
-    
+
     // Remove existing commas and validate
     const cleanValue = value.replace(/,/g, '').toLowerCase();
-    
+
     // Allow 'k' suffix
     if (cleanValue.endsWith('k') || /^\d*\.?\d*$/.test(cleanValue)) {
       handleFilterChange(key, cleanValue);
@@ -609,15 +616,22 @@ const Home = () => {
               key={button.id}
               onClick={() => handleFunctionSelect(button.id)}
               disabled={loading}
-              className={`text-center py-2.5 sm:py-3.5 rounded-md px-10 text-base sm:text-lg font-medium transition
-                ${selectedFunction === button.id
-                  ? `bg-gradient-to-r ${button.gradient} text-white`
+              style={{ borderColor: selectedFunction === button.id ? button.borderColor : 'transparent' }}
+              className={`relative text-center py-6 px-8 hover:scale-105 duration-300 transition-all rounded-lg w-full lg:w-[335px] border-2 h-[184px] transition${selectedFunction === button.id
+                  ? ` text-white`
                   : loading
-                    ? 'bg-[#2a2a2a] text-[#aeacac] opacity-50 cursor-not-allowed'
-                    : 'bg-[#442561] text-[#aeacac] hover:bg-[#301C43]'
+                    ? ' text-[#aeacac] opacity-50 cursor-not-allowed border-transparent'
+                    : ' text-[#aeacac] hover:bg-[#301C43] border-transparent'
                 }`}
             >
-              {button.label}
+              <div className={`absolute inset-0 ${selectedFunction === button.id ? 'bg-gradient-to-br from-[#9C46EB] to-[#582885] opacity-40' : ''}`}>
+                <img src={button.bgImg} className='w-full h-full object-cover rounded-lg' />
+              </div>
+              <div className="flex flex-col items-start relative z-10">
+                <div className="text-2xl font-bold mb-1 !text-white">{button.title}</div>
+                <div className="text-2xl font-bold mb-3">{button.subtitle}</div>
+                <p className="text-sm text-left opacity-80 whitespace-pre-line">{button.content}</p>
+              </div>
             </button>
           ))}
         </div>
@@ -673,11 +687,11 @@ const Home = () => {
                 {selectedTokens.map((token, index) => (
                   <div
                     key={index}
-                    className="flex items-center gap-2 bg-[#2a2a2a] px-3 py-1.5 rounded-full w-full lg:w-fit justify-between"
+                    className="flex items-center gap-2 bg-[#0F0F1E] border border-[#9C46EB]/40 px-3 py-1.5 rounded-full w-full lg:w-fit justify-between"
                   >
-                    <span className="text-sm truncate">{token}</span>
+                    <span className="text-sm text-white/80 truncate">{token}</span>
                     <X
-                      className="h-4 w-4 min-w-4 cursor-pointer hover:text-red-500"
+                      className="h-4 w-4 min-w-4 cursor-pointer hover:text-red-500 text-white/60  transition-colors"
                       onClick={() => removeToken(token)}
                     />
                   </div>
@@ -715,7 +729,7 @@ const Home = () => {
 
           {walletData.length > 0 && (
             <div className="flex justify-center mt-8">
-              <button 
+              <button
                 onClick={copyAllAddresses}
                 className="text-center bg-gradient-to-r from-[#582885] to-[#9c46eb] text-white px-6 sm:px-10 py-2.5 sm:py-3 rounded-full flex items-center gap-2 text-base sm:text-lg font-medium hover:opacity-90"
               >
@@ -743,12 +757,12 @@ const Home = () => {
                 type="text"
                 value={formatPnlInput(walletCheckerFilters.minPnl)}
                 onChange={(e) => handlePnlChange('minPnl', e.target.value)}
-                placeholder="e.g. 100,000 or 100k"
+                placeholder="e.g. 100,000"
                 className="w-full bg-transparent border border-[#9c46eb]/[70%] rounded-lg py-2 px-3 outline-none"
               />
               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">USD</span>
             </div>
-            <p className="text-xs text-gray-500">Enter value in USD (e.g. 100,000 or 100k)</p>
+            <p className="text-xs text-gray-500">Enter value in USD (e.g. 100,000)</p>
           </div>
           <div className="flex flex-col gap-2">
             <label className="text-sm text-gray-400">Max PNL ($)</label>
@@ -757,12 +771,12 @@ const Home = () => {
                 type="text"
                 value={formatPnlInput(walletCheckerFilters.maxPnl)}
                 onChange={(e) => handlePnlChange('maxPnl', e.target.value)}
-                placeholder="e.g. 100,000 or 100k"
+                placeholder="e.g. 100,000"
                 className="w-full bg-transparent border border-[#9c46eb]/[70%] rounded-lg py-2 px-3 outline-none"
               />
               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">USD</span>
             </div>
-            <p className="text-xs text-gray-500">Enter value in USD (e.g. 100,000 or 100k)</p>
+            <p className="text-xs text-gray-500">Enter value in USD (e.g. 100,000)</p>
           </div>
 
           <div className="flex flex-col gap-2">
@@ -804,6 +818,17 @@ const Home = () => {
               placeholder="Max Tokens"
               className="bg-transparent border border-[#9c46eb]/[70%] rounded-lg py-2 px-3 outline-none"
             />
+          </div>
+          <div className="flex flex-col gap-2 col-span-2 lg:col-span-1">
+            <label className="text-sm text-gray-400">Time Period</label>
+            <select
+              value={walletCheckerFilters.timeframe}
+              onChange={(e) => handleFilterChange('timeframe', e.target.value)}
+              className="bg-[#0F0F1E] border border-[#9c46eb]/[70%] rounded-lg py-2 px-3 outline-none"
+            >
+              <option value="7d">7 Days</option>
+              <option value="30d">30 Days</option>
+            </select>
           </div>
         </div>
         <div className="flex flex-col gap-4 mb-12">
@@ -847,14 +872,14 @@ const Home = () => {
               {selectedWalletAddresses.map((address, index) => (
                 <div
                   key={index}
-                  className="flex items-center gap-2 bg-[#2a2a2a] px-3 py-1.5 rounded-full w-full lg:w-fit justify-between"
+                  className="flex items-center gap-2 bg-[#0F0F1E] border border-[#9C46EB]/40 px-3 py-1.5 rounded-full w-full lg:w-fit justify-between"
                 >
                   <span className="text-sm truncate">{address}</span>
                   <X
                     className="h-4 w-4 min-w-4 cursor-pointer hover:text-red-500"
                     onClick={() => {
                       setSelectedWalletAddresses([...selectedWalletAddresses].filter((addr: string) => addr !== address));
-                      
+
                     }}
                   />
                 </div>
@@ -879,7 +904,7 @@ const Home = () => {
                   selectedWalletAddresses={selectedWalletAddresses}
                 />
                 <div className="flex justify-center mt-8">
-                  <button 
+                  <button
                     onClick={copyAllAddresses}
                     className="text-center bg-gradient-to-r from-[#582885] to-[#9c46eb] text-white px-6 sm:px-10 py-2.5 sm:py-3 rounded-full flex items-center gap-2 text-base sm:text-lg font-medium hover:opacity-90"
                   >

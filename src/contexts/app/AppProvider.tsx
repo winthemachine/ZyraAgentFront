@@ -16,27 +16,27 @@ import { useAPI } from '@/hooks/useAPI';
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { post } = useAPI();
 
-  
+
   const [selectedTokens, setSelectedTokens] = useState<string[]>([]);
   const [selectedFunction, setSelectedFunction] = useState<'traders' | 'holders' | 'buyers' | null>(null);
 
-  
+
   const [walletData, setWalletData] = useState<TableData[]>([]);
   const [topTradersData, setTopTradersData] = useState<TopTraderData[]>([]);
   const [topHoldersData, setTopHoldersData] = useState<TopHolderData[]>([]);
   const [earlyBuyersData, setEarlyBuyersData] = useState<EarlyBuyerData[]>([]);
   const [walletCheckerData, setWalletCheckerData] = useState<WalletCheckerData[]>([]);
 
-  
+
   const [loading, setLoading] = useState(false);
   const [checkWalletLoading, setCheckWalletLoading] = useState(false);
   const [walletDetailsLoading, setWalletDetailsLoading] = useState(true);
 
-  
+
   const [walletDetails, setWalletDetails] = useState<WalletDetailsResponse | null>(null);
   const [selectedWalletAddresses, setSelectedWalletAddresses] = useState<string[]>([]);
 
-  
+
   const [walletCheckerFilters, setWalletCheckerFilters] = useState<WalletCheckerFilters>({
     minPnl: '',
     maxPnl: '',
@@ -47,10 +47,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     timeframe: '30d'
   });
 
-  
+
   const [filteredWalletData, setFilteredWalletData] = useState<WalletCheckerData[]>([]);
 
-  
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+
+
   const addToken = useCallback((token: string) => {
     if (selectedTokens.length >= 20) {
       TOASTNO.warning('Maximum 20 tokens allowed');
@@ -71,10 +73,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setSelectedTokens([]);
   }, []);
 
-  
+
   // const sortByTopRank = (data: any[]) => {
   //   return [...data].sort((a, b) => {
-      
+
   //     const getTopNumber = (tag: string) => {
   //       if (!tag) return Infinity;  
   //       const match = tag.match(/TOP(\d+)/);
@@ -84,19 +86,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   //     const rankA = getTopNumber(a.wallet_tag_v2);
   //     const rankB = getTopNumber(b.wallet_tag_v2);
 
-      
+
   //     if (rankA !== rankB) {
   //       return rankA - rankB;  
   //     }
 
-      
+
   //     const profitA = parseFloat(a.profit || a.realized_profit || '0');
   //     const profitB = parseFloat(b.profit || b.realized_profit || '0');
   //     return profitB - profitA;
   //   });
   // };
 
-  
+
   const fetchTopTraders = useCallback(async (addresses: string[]) => {
     try {
       const response = await post('/top-traders', { addresses });
@@ -154,7 +156,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           ...item,
           wallet_address: wallets[index] // Add the wallet address to each item
         }));
-        console.log({dataWithAddresses});
+        console.log({ dataWithAddresses });
         setWalletCheckerData(dataWithAddresses);
         return dataWithAddresses;
       }
@@ -180,9 +182,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           await fetchTopHolders(selectedTokens);
           break;
         case 'buyers':
-          const buyersData = await fetchEarlyBuyers(selectedTokens);
-          setEarlyBuyersData(buyersData);
-          break;
+          {
+            const buyersData = await fetchEarlyBuyers(selectedTokens);
+            setEarlyBuyersData(buyersData);
+            break;
+          }
       }
     } finally {
       setLoading(false);
@@ -209,12 +213,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (!value) return 0;
     // Remove commas and dots except the last decimal point
     const cleanValue = value.replace(/,/g, '').toLowerCase();
-    
+
     // Handle 'k' suffix
     if (cleanValue.endsWith('k')) {
       return parseFloat(cleanValue.slice(0, -1)) * 1000;
     }
-    
+
     return parseFloat(cleanValue);
   };
 
@@ -223,19 +227,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setFilteredWalletData([]);
       return;
     }
-
+    console.log('walletCheckerData', walletCheckerData);
     const filtered = walletCheckerData.filter(wallet => {
-      const data = wallet.wallet_7d;
-      const distribution = wallet.distribution_7d;
+      const timeframe = walletCheckerFilters.timeframe;
+      const data = timeframe === '7d' ? wallet.wallet_7d : wallet.wallet_30d;
+      const distribution = timeframe === '7d' ? wallet.distribution_7d : wallet.distribution_30d;
 
       if (!data || !distribution) return false;
-      if(walletCheckerFilters.minPnl === '' && walletCheckerFilters.maxPnl === '' && walletCheckerFilters.minWinrate === '' && walletCheckerFilters.maxWinrate === '' && walletCheckerFilters.minTokens === '' && walletCheckerFilters.maxTokens === '') {
+      if (walletCheckerFilters.minPnl === '' && walletCheckerFilters.maxPnl === '' && walletCheckerFilters.minWinrate === '' && walletCheckerFilters.maxWinrate === '' && walletCheckerFilters.minTokens === '' && walletCheckerFilters.maxTokens === '') {
         return true;
       }
 
       const minPnl = parseFilterValue(walletCheckerFilters.minPnl);
       const maxPnl = parseFilterValue(walletCheckerFilters.maxPnl);
-      
+
       // PNL check in USD
       if (walletCheckerFilters.minPnl !== '' && !isNaN(minPnl) && data.data.total_value < minPnl) return false;
       if (walletCheckerFilters.maxPnl !== '' && !isNaN(maxPnl) && data.data.total_value > maxPnl) return false;
@@ -256,6 +261,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
     setFilteredWalletData(filtered);
   }, [walletCheckerData, walletCheckerFilters]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
 
   return (
     <AppContext.Provider
@@ -283,7 +297,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setWalletCheckerFilters,
         filteredWalletData,
         selectedWalletAddresses,
-        setSelectedWalletAddresses
+        setSelectedWalletAddresses,
+        windowWidth
       }}>
       {children}
     </AppContext.Provider>

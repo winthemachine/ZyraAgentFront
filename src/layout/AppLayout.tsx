@@ -1,4 +1,3 @@
-import AppFooter from '@/components/common/AppFooter'
 import AppHeader from '@/components/common/AppHeader'
 import React from 'react'
 import { Outlet } from 'react-router-dom'
@@ -11,7 +10,7 @@ const AppLayout: React.FC = () => {
                <div className=''>
                 <Outlet />
                </div>
-                <AppFooter />
+                {/* <AppFooter /> */}
             </div>
         </main>
     )

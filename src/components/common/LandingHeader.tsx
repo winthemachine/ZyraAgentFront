@@ -4,14 +4,14 @@ import { Link } from 'react-router-dom'
 import { useNavigate } from 'react-router-dom';
 import { APP_ROUTES } from '@/utils/constant';
 
-const navigationItems = [
-  { name: 'Home', sectionId: 'hero' },
-  { name: 'Features', sectionId: 'features' },
-  { name: 'Discover', sectionId: 'discover' },
-  { name: 'Tools', sectionId: 'tools' },
-  { name: 'Insights', sectionId: 'insights' },
-  { name: 'Reviews', sectionId: 'testimonials' },
-];
+// const navigationItems = [
+//   { name: 'Home', sectionId: 'hero' },
+//   { name: 'Features', sectionId: 'features' },
+//   { name: 'Discover', sectionId: 'discover' },
+//   { name: 'Tools', sectionId: 'tools' },
+//   { name: 'Insights', sectionId: 'insights' },
+//   { name: 'Reviews', sectionId: 'testimonials' },
+// ];
 
 const LandingHeader: React.FC = () => {
     const navigate = useNavigate();
@@ -19,13 +19,13 @@ const LandingHeader: React.FC = () => {
     const mobileMenuRef = useRef<HTMLDivElement>(null)
     const menuButtonRef = useRef<HTMLButtonElement>(null)
 
-    const scrollToSection = (sectionId: string) => {
-        const element = document.getElementById(sectionId);
-        if (element) {
-            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            setMobileMenuOpen(false);
-        }
-    };
+    // const scrollToSection = (sectionId: string) => {
+    //     const element = document.getElementById(sectionId);
+    //     if (element) {
+    //         element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    //         setMobileMenuOpen(false);
+    //     }
+    // };
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -53,7 +53,7 @@ const LandingHeader: React.FC = () => {
                         <h1 className="text-2xl sm:text-3xl font-bold text-[#9c46eb]">ZYRA</h1>
                     </div>
                     
-                    <div className="hidden lg:flex items-center gap-6">
+                    {/* <div className="hidden lg:flex items-center gap-6">
                         {navigationItems.map((item) => (
                             <button
                                 key={item.sectionId}
@@ -63,7 +63,7 @@ const LandingHeader: React.FC = () => {
                                 {item.name}
                             </button>
                         ))}
-                    </div>
+                    </div> */}
 
                     <div className="flex items-center gap-4">
                         <Link to={'/home'}
@@ -79,9 +79,9 @@ const LandingHeader: React.FC = () => {
 
             </header>
                 {mobileMenuOpen && (
-                    <div ref={mobileMenuRef} className="lg:hidden w-full bg-[#050510] border-t border-[#484747] px-4 sm:px-6 lg:px-8 py-4 w-full min-xl:container mx-auto">
+                    <div ref={mobileMenuRef} className="lg:hidden w-full bg-[#050510] border-t border-[#484747] px-4 sm:px-6 lg:px-8 py-4 min-xl:container mx-auto">
                         <nav className="flex flex-col space-y-4">
-                            {navigationItems.map((item) => (
+                            {/* {navigationItems.map((item) => (
                                 <button
                                     key={item.sectionId}
                                     onClick={() => scrollToSection(item.sectionId)}
@@ -89,7 +89,7 @@ const LandingHeader: React.FC = () => {
                                 >
                                     {item.name}
                                 </button>
-                            ))}
+                            ))} */}
                             <Link to={'/home'} className="w-full rounded-[30px] bg-gradient-to-r from-[rgba(158,71,238,1)] to-[rgba(90,41,136,1)] font-medium text-white text-lg px-4 py-1.5">
                                 Sign In
                             </Link>

@@ -29,8 +29,18 @@ import avatar4 from '../assets/images/avatar-4.png';
 import avatar5 from '../assets/images/avatar-5.png';  
 import icon346 from '../assets/images/346.png';
 
+import traderBG from '../assets/images/traders.png';
+import holderBG from '../assets/images/holders.png';
+import buyerBG from '../assets/images/buyers.png';
+
+import mobileLandingBG from '../assets/images/mobile-landing-bg.png';
+
 const IMAGES = {
   icon346,
+  mobileLandingBG,
+  traderBG,
+  holderBG,
+  buyerBG,
   avatar1,
   avatar2,
   avatar3,

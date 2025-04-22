@@ -45,7 +45,7 @@ const AppHeader: React.FC = () => {
                     <Link to={'/home'}
                         className="hidden lg:block bg-gradient-to-r from-[#582885] to-[#9c46eb] text-white px-3 sm:px-5 py-2 rounded-full hover:opacity-90 transition text-sm sm:text-lg"
                     >
-                        Account
+                        Launch
                     </Link>
                     <button ref={menuButtonRef} className="lg:hidden text-white cursor-pointer" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
                         <Menu size={28} />
@@ -61,7 +61,7 @@ const AppHeader: React.FC = () => {
                                 Home
                             </Link>
                             <Link to="/home" className="bg-gradient-to-r from-[#582885] to-[#9c46eb] text-white px-3 sm:px-5 py-2 rounded-full hover:opacity-90 transition text-sm sm:text-lg" onClick={() => setMobileMenuOpen(false)}>
-                                Account
+                                Launch
                             </Link>
                         </nav>
                     </div>

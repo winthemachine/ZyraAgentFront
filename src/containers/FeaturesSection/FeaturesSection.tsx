@@ -1,6 +1,8 @@
 import { BitcoinIcon, CoinsIcon, WalletIcon } from "lucide-react";
 import { Card, CardContent } from "../../components/ui/card";
 import IMAGES from "@/utils/images";
+import { APP_ROUTES } from "@/utils/constant";
+import { useNavigate } from "react-router-dom";
 
 export const FeaturesSection = (): JSX.Element => {
   const featureCards = [
@@ -30,42 +32,48 @@ export const FeaturesSection = (): JSX.Element => {
     },
   ];
 
+  const navigate = useNavigate();
+
   return (
     <div className="flex flex-col w-full items-center px-0 sm:px-8 md:px-14 py-4 md:py-20 ">
-      
       <div className="flex flex-col items-center gap-2.5 mb-8">
         <h2 className="font-medium text-white  md:text-5xl text-center md:leading-[60px] max-w-sm">
           Zyra is as simple as it gets.
         </h2>
-        <p className="font-medium text-[#fff] max-md:max-w-[310px] text-sm md:text-2xl text-center leading-normal max-w-[747px]">
+        <p className="font-medium text-[#AEACAC] max-md:max-w-[310px] text-sm md:text-2xl text-center leading-normal max-w-[747px]">
           Find 1000s of wallets to track in a matter of a few minutes.
         </p>
       </div>
 
       
-      <div className="flex flex-wrap justify-center gap-2 lg:gap-11 w-full">
+      <div className="flex flex-wrap justify-center gap-2 lg:gap-11 w-full relative">
+      <div className="w-[50px] h-[50px] md:w-[70px] md:h-[70px] absolute top-[30%] md:top-[50%] left-[5%] md:left-[10%] bg-[#9e47ee] rounded-[35px] blur-[50px]" />
+
         {featureCards.map((feature, index) => (
           <Card
             key={index}
-            className="lg:w-[410px] bg-[#0D0D18] border-4 opacity-80 rounded-[20px] border-[#35353E] transition-opacity"
+            onClick={() => {
+              navigate(APP_ROUTES.HOME);
+            }}
+            className="w-full lg:w-[410px] hover:scale-105 duration-300 transition-all bg-transparent border-4 rounded-[20px] border-[#35353E] !text-white cursor-pointer"
           >
-            <CardContent className="p-4 lg:p-8 flex flex-col items-start">
+            <CardContent className="p-4 lg:p-8 flex flex-col items-start text-white">
               
               {feature.iconSrc.includes("solar-wallet-linear.svg") ? (
                 <img
-                  className="w-[50px] h-[50px] mb-4"
+                  className="w-[50px] h-[50px]"
                   alt="Solar wallet linear"
                   src={feature.iconSrc}
                 />
               ) : feature.iconSrc.includes("group.png") ? (
                 <img
-                  className="w-10 h-10 mb-4"
+                  className="w-10 h-10"
                   alt="Group"
                   src={feature.iconSrc}
                 />
               ) : (
                 <img
-                  className="w-[50px] h-[50px] mb-4"
+                  className="w-[50px] h-[50px]"
                   alt="Tabler coin"
                   src={feature.iconSrc}
                 />
@@ -80,7 +88,7 @@ export const FeaturesSection = (): JSX.Element => {
                     {feature.subtitle}
                   </h4>
                 </div>
-                <p className="font-medium max-w-[135px] md:max-w-fit text-white text-[10px] lg:text-xl text-center leading-normal">
+                <p className="font-medium max-w-[200px] lg:max-w-fit  text-white text-sm lg:text-xl text-center leading-normal">
                   {feature.description}
                 </p>
               </div>
