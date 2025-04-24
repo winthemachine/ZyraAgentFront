@@ -625,11 +625,13 @@ const Home = () => {
               <p className="font-bold">350+</p>
               <p className="text-[#7b7a7a]">Followers</p>
             </div>
-            <Icon icon={'prime:twitter'} className="sm:h-[43px] sm:w-[43px] cursor-pointer" />
+            <a href="https://x.com/ZyraAgent" target="_blank" rel="noopener noreferrer">
+              <Icon icon={'prime:twitter'} className="sm:h-[43px] sm:w-[43px] cursor-pointer" />
+            </a>
           </div>
 
           <div className="inline-block bg-[#9c46eb]/[32%] rounded-full px-4 sm:px-5 py-2 sm:py-2.5 text-sm sm:text-base text-[#AEACAC]">
-            CA: $ZYRA Token Not Launched Yet
+            CA: 2ifjRAABYHa7M6Ze6FPeTyBSxbdFPh6f1yactocapump
           </div>
         </div>
 

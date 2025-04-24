@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom"
 import { useEffect } from "react"
 import { APP_ROUTES } from "@/utils/constant"
 import { useApp } from "@/hooks/useApp"
+import AppFooter from "@/components/common/AppFooter"
 
 const Landing = (): JSX.Element => {
   const navigate = useNavigate();
@@ -106,7 +107,7 @@ const Landing = (): JSX.Element => {
             <UserTestimonialsSection />
           </div>
         </section> */}
-        {/* <AppFooter /> */}
+        <AppFooter />
       </div>
     </div>
   )
